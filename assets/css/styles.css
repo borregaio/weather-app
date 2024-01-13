@@ -1,3 +1,7 @@
 .input-group {
     display: block;
 }
+
+#today {
+    border: 1px black solid;
+}
