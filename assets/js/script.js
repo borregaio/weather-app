@@ -1,275 +1,121 @@
 const apiKeyOpenCage = '067aae2211484d238b0cff439ab93db1';
+const apiKeyOpenWeather = '91e283268747deb9c5dedf7f54029a13';
+const cityHistory = $('#history');
+const searchButton = $('#search-button');
+const searchInput = $('#search-input');
+const clearButton = $('#clear-button');
+let cityNames = JSON.parse(localStorage.getItem('cityNames')) || [];
 
-var newButton = $('<button>');
-var cityHistory = $('#history');
-var searchButton = $('#search-button');
-var searchInput = $('#search-input');
-var clearButton = $('#clear-button');
-var cityNames = JSON.parse(localStorage.getItem('cityNames')) || [];
+function clearCityHistory() {
+    cityHistory.empty();
+    localStorage.removeItem('cityNames');
+    cityNames = [];
+}
+
+function fetchWeatherData(searchValue) {
+    const geocodingUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(searchValue)}&key=${apiKeyOpenCage}`;
+
+    fetch(geocodingUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.results && data.results.length > 0) {
+                const location = data.results[0].geometry;
+                const latitude = location.lat;
+                const longitude = location.lng;
+
+                const weatherApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKeyOpenWeather}`;
+
+                return fetch(weatherApiUrl);
+            } else {
+                console.error('Error getting coordinates for the city');
+            }
+        })
+        .then(weatherResponse => weatherResponse.json())
+        .then(weatherData => {
+            displayWeatherData(searchValue, weatherData);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+function displayWeatherData(city, weatherData) {
+    // Display today's weather
+    const todayInfo = $('#today').addClass('today').empty();
+    const today = dayjs();
+    const iconCode = weatherData.list[0].weather[0].icon;
+    const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
+    const temperatureKelvin = weatherData.list[0].main.temp;
+    const temperatureCelsius = (temperatureKelvin - 273.15).toFixed(0);
+    const windCode = weatherData.list[0].wind.speed;
+    const humidityCode = weatherData.list[0].main.humidity;
+
+    todayInfo.append($('<h1>').text(city.charAt(0).toUpperCase() + city.slice(1)));
+    todayInfo.append(' ');
+    todayInfo.append($('<h4>').text(today.format('DD/MM/YYYY')));
+    todayInfo.append(' ');
+    todayInfo.append($('<img>').attr('src', iconUrl));
+    todayInfo.append($('<p>').text('Temp: ' + temperatureCelsius + '°C'));
+    todayInfo.append($('<p>').text('Wind: ' + windCode + 'KPH'));
+    todayInfo.append($('<p>').text('Humidity: ' + humidityCode + '%'));
+
+    // Display 5-day forecast
+    const forecast = $('#forecast').empty();
+    const indexArray = [7, 15, 23, 31, 39];
+
+    forecast.append($('<h3>').text('5-Day Forecast:'));
+    const container = $('<div>').addClass('container');
+    const row = $('<div>').addClass('row');
+
+    for (let i = 0; i < indexArray.length; i++) {
+        const dayIndex = indexArray[i];
+        const day = $('<div>').addClass('col-sm forecast');
+        const dayh4 = $('<h4>');
+        const dayDate = today.add(i + 1, 'day');
+        const dayIcon = weatherData.list[dayIndex].weather[0].icon;
+        const dayIconUrl = `http://openweathermap.org/img/wn/${dayIcon}.png`;
+        const dayTemperatureKelvin = weatherData.list[dayIndex].main.temp;
+        const dayTemperatureCelsius = (dayTemperatureKelvin - 273.15).toFixed(0);
+        const dayWindCode = weatherData.list[dayIndex].wind.speed;
+        const dayHumidityCode = weatherData.list[dayIndex].main.humidity;
+
+        dayh4.text(dayDate.format('DD/MM/YYYY'));
+        day.append(dayh4);
+        day.append($('<img>').attr('src', dayIconUrl));
+        day.append($('<p>').text('Temp: ' + dayTemperatureCelsius + '°C'));
+        day.append($('<p>').text('Wind: ' + dayWindCode + 'KPH'));
+        day.append($('<p>').text('Humidity: ' + dayHumidityCode + '%'));
+        row.append(day);
+    }
+
+    container.append(row);
+    forecast.append(container);
+}
 
 clearButton.on('click', function (event) {
     event.preventDefault();
-
-    // Clear the content of the cityHistory element
-    cityHistory.empty();
-
-    // Remove the stored city names from local storage
-    localStorage.removeItem('cityNames');
-
-    // Clear the cityNames array
-    cityNames = [];
+    clearCityHistory();
 });
 
 searchButton.on('click', function (event) {
     event.preventDefault();
-
-    // Get the value of the input field
-    var searchValue = searchInput.val().trim();
+    const searchValue = searchInput.val().trim();
 
     if (!cityNames.includes(searchValue)) {
-        // Create a new button with the input's city name
-        var newButton = $('<button>').addClass('btn btn-secondary').text(searchValue.charAt(0).toUpperCase() + searchValue.slice(1));
+        fetchWeatherData(searchValue);
 
-        // Add a click event to the newButton
+        const newButton = $('<button>').addClass('btn btn-secondary').text(searchValue.charAt(0).toUpperCase() + searchValue.slice(1));
         newButton.on('click', function () {
-            var clickedCity = $(this).text();
-            console.log(clickedCity);
-            const geocodingUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(clickedCity)}&key=${apiKeyOpenCage}`;
-
-            fetch(geocodingUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.results && data.results.length > 0) {
-                        const location = data.results[0].geometry;
-                        const latitude = location.lat;
-                        const longitude = location.lng;
-    
-                        // Step 2: Use Latitude and Longitude to construct OpenWeatherMap API URL
-                        const apiKeyOpenWeather = '91e283268747deb9c5dedf7f54029a13';
-                        const weatherApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKeyOpenWeather}`;
-    
-                        // Step 3: Fetch weather data from OpenWeatherMap API
-                        return fetch(weatherApiUrl);
-                    } else {
-                        console.error('Error getting coordinates for the city');
-                    }
-                })
-                .then(weatherResponse => weatherResponse.json())
-                .then(weatherData => {
-                    // Step 4: Access the weather icon code and create the URL for the PNG image
-                    const iconCode = weatherData.list[0].weather[0].icon;
-                    const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
-                    const temperatureKelvin = weatherData.list[0].main.temp;
-                    const temperatureCelsius = (temperatureKelvin - 273.15).toFixed(0);
-                    const windCode = weatherData.list[0].wind.speed;
-                    const humidityCode = weatherData.list[0].main.humidity;
-                    // console.log('Weather Icon URL:', iconUrl);
-    
-                    // Today's weather
-                    var today = dayjs();
-                    var todayInfo = $('#today').addClass('today');
-                    // Clear existing content before appending new information
-                    todayInfo.empty();
-                    var emoji = $('<img>');
-                    var temperature = $('<p>');
-                    var wind = $('<p>');
-                    var humidity = $('<p>');
-    
-                    todayInfo.append($('<h1>').text(searchValue.charAt(0).toUpperCase() + searchValue.slice(1)));
-                    todayInfo.append(' ');
-                    todayInfo.append($('<h4>').text(today.format('DD/MM/YYYY')));
-                    todayInfo.append(' ');
-                    todayInfo.append(emoji.attr('src', iconUrl));
-                    todayInfo.append(temperature.text('Temp: ' + temperatureCelsius + '°C'));
-                    todayInfo.append(wind.text('Wind: ' + windCode + 'KPH'));
-                    todayInfo.append(humidity.text('Humidity: ' + humidityCode + '%'));
-    
-                    var forecast = $('#forecast');
-    
-                    // Clear existing content before appending new information
-                    forecast.empty();
-    
-                    // Arrays for the indexes of the next 5 days
-                    var indexArray = [7, 15, 23, 31, 39];
-    
-                    forecast.append($('<h3>').text('5-Day Forecast:'));
-    
-                    // Create container
-                    var container = $('<div>').addClass('container');
-    
-                    // Create row inside the container
-                    var row = $('<div>').addClass('row');
-    
-                    // Loop through the indexArray to create divs for each day
-                    for (var i = 0; i < indexArray.length; i++) {
-                        var dayIndex = indexArray[i];
-                        var day = $('<div>').addClass('col-sm forecast');
-                        var dayh4 = $('<h4>');
-                        var dayDate = today.add(i + 1, 'day');
-                        var dayemoji = $('<img>');
-                        const dayIcon = weatherData.list[dayIndex].weather[0].icon;
-                        const dayIconUrl = `http://openweathermap.org/img/wn/${dayIcon}.png`;
-                        var dayTemperature = $('<p>');
-                        var dayWind = $('<p>');
-                        var dayHumidity = $('<p>');
-    
-                        const dayTemperatureKelvin = weatherData.list[dayIndex].main.temp;
-                        const dayTemperatureCelsius = (dayTemperatureKelvin - 273.15).toFixed(0);
-                        const dayWindCode = weatherData.list[dayIndex].wind.speed;
-                        const dayHumidityCode = weatherData.list[dayIndex].main.humidity;
-    
-                        // Set the content for each day
-                        dayh4.text(dayDate.format('DD/MM/YYYY'));
-                        day.append(dayh4);
-                        day.append(dayemoji.attr('src', dayIconUrl));
-                        day.append(dayTemperature.text('Temp: ' + dayTemperatureCelsius + '°C'));
-                        day.append(dayWind.text('Wind: ' + dayWindCode + 'KPH'));
-                        day.append(dayHumidity.text('Humidity: ' + dayHumidityCode + '%'));
-    
-                        // Append each day to the row
-                        row.append(day);
-                    }
-    
-                    // Append the row to the container
-                    container.append(row);
-    
-                    // Append the container to the forecast
-                    forecast.append(container);
-    
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-
+            const clickedCity = $(this).text();
+            fetchWeatherData(clickedCity);
         });
 
-        // Append the new button to the cityHistory element
         cityHistory.append(newButton);
-
-        // Add the city name to the array
         cityNames.push(searchValue);
-
-        // Store the array of city names in local storage
         localStorage.setItem('cityNames', JSON.stringify(cityNames));
-
-        // Clear the input field
         searchInput.val('');
-
-        // Step 1: Get Latitude and Longitude from OpenCage Geocoding API
-        const geocodingUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(searchValue)}&key=${apiKeyOpenCage}`;
-
-        fetch(geocodingUrl)
-            .then(response => response.json())
-            .then(data => {
-                if (data.results && data.results.length > 0) {
-                    const location = data.results[0].geometry;
-                    const latitude = location.lat;
-                    const longitude = location.lng;
-
-                    // Step 2: Use Latitude and Longitude to construct OpenWeatherMap API URL
-                    const apiKeyOpenWeather = '91e283268747deb9c5dedf7f54029a13';
-                    const weatherApiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKeyOpenWeather}`;
-
-                    // Step 3: Fetch weather data from OpenWeatherMap API
-                    return fetch(weatherApiUrl);
-                } else {
-                    console.error('Error getting coordinates for the city');
-                }
-            })
-            .then(weatherResponse => weatherResponse.json())
-            .then(weatherData => {
-                // Step 4: Access the weather icon code and create the URL for the PNG image
-                const iconCode = weatherData.list[0].weather[0].icon;
-                const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
-                const temperatureKelvin = weatherData.list[0].main.temp;
-                const temperatureCelsius = (temperatureKelvin - 273.15).toFixed(0);
-                const windCode = weatherData.list[0].wind.speed;
-                const humidityCode = weatherData.list[0].main.humidity;
-                // console.log('Weather Icon URL:', iconUrl);
-
-                // Today's weather
-                var today = dayjs();
-                var todayInfo = $('#today').addClass('today');
-                // Clear existing content before appending new information
-                todayInfo.empty();
-                var emoji = $('<img>');
-                var temperature = $('<p>');
-                var wind = $('<p>');
-                var humidity = $('<p>');
-
-                todayInfo.append($('<h1>').text(searchValue.charAt(0).toUpperCase() + searchValue.slice(1)));
-                todayInfo.append(' ');
-                todayInfo.append($('<h4>').text(today.format('DD/MM/YYYY')));
-                todayInfo.append(' ');
-                todayInfo.append(emoji.attr('src', iconUrl));
-                todayInfo.append(temperature.text('Temp: ' + temperatureCelsius + '°C'));
-                todayInfo.append(wind.text('Wind: ' + windCode + 'KPH'));
-                todayInfo.append(humidity.text('Humidity: ' + humidityCode + '%'));
-
-                var forecast = $('#forecast');
-
-                // Clear existing content before appending new information
-                forecast.empty();
-
-                // Arrays for the indexes of the next 5 days
-                var indexArray = [7, 15, 23, 31, 39];
-
-                forecast.append($('<h3>').text('5-Day Forecast:'));
-
-                // Create container
-                var container = $('<div>').addClass('container');
-
-                // Create row inside the container
-                var row = $('<div>').addClass('row');
-
-                // Loop through the indexArray to create divs for each day
-                for (var i = 0; i < indexArray.length; i++) {
-                    var dayIndex = indexArray[i];
-                    var day = $('<div>').addClass('col-sm forecast');
-                    var dayh4 = $('<h4>');
-                    var dayDate = today.add(i + 1, 'day');
-                    var dayemoji = $('<img>');
-                    const dayIcon = weatherData.list[dayIndex].weather[0].icon;
-                    const dayIconUrl = `http://openweathermap.org/img/wn/${dayIcon}.png`;
-                    var dayTemperature = $('<p>');
-                    var dayWind = $('<p>');
-                    var dayHumidity = $('<p>');
-
-                    const dayTemperatureKelvin = weatherData.list[dayIndex].main.temp;
-                    const dayTemperatureCelsius = (dayTemperatureKelvin - 273.15).toFixed(0);
-                    const dayWindCode = weatherData.list[dayIndex].wind.speed;
-                    const dayHumidityCode = weatherData.list[dayIndex].main.humidity;
-
-                    // Set the content for each day
-                    dayh4.text(dayDate.format('DD/MM/YYYY'));
-                    day.append(dayh4);
-                    day.append(dayemoji.attr('src', dayIconUrl));
-                    day.append(dayTemperature.text('Temp: ' + dayTemperatureCelsius + '°C'));
-                    day.append(dayWind.text('Wind: ' + dayWindCode + 'KPH'));
-                    day.append(dayHumidity.text('Humidity: ' + dayHumidityCode + '%'));
-
-                    // Append each day to the row
-                    row.append(day);
-                }
-
-                // Append the row to the container
-                container.append(row);
-
-                // Append the container to the forecast
-                forecast.append(container);
-
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
     }
 });
-
-
-
-
-
-
 
 
 
