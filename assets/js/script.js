@@ -92,6 +92,20 @@ function displayWeatherData(city, weatherData) {
     forecast.append(container);
 }
 
+function initializeCityButtons() {
+    for (const cityName of cityNames) {
+        const newButton = $('<button>').addClass('btn btn-secondary').text(cityName.charAt(0).toUpperCase() + cityName.slice(1));
+        newButton.on('click', function () {
+            const clickedCity = $(this).text();
+            fetchWeatherData(clickedCity);
+        });
+        cityHistory.append(newButton);
+    }
+}
+
+// Function to initialize city buttons when the page loads
+initializeCityButtons();
+
 clearButton.on('click', function (event) {
     event.preventDefault();
     clearCityHistory();
@@ -101,34 +115,23 @@ searchButton.on('click', function (event) {
     event.preventDefault();
     const searchValue = searchInput.val().trim();
 
-    if (!cityNames.includes(searchValue)) {
-        fetchWeatherData(searchValue);
+    // Check if searchValue is not empty
+    if (searchValue !== '') {
+        if (!cityNames.includes(searchValue)) {
+            console.log('Before fetchWeatherData:', searchValue);
+            fetchWeatherData(searchValue);
 
-        const newButton = $('<button>').addClass('btn btn-secondary').text(searchValue.charAt(0).toUpperCase() + searchValue.slice(1));
-        newButton.on('click', function () {
-            const clickedCity = $(this).text();
-            fetchWeatherData(clickedCity);
-        });
+            const newButton = $('<button>').addClass('btn btn-secondary').text(searchValue.charAt(0).toUpperCase() + searchValue.slice(1));
+            newButton.on('click', function () {
+                const clickedCity = $(this).text();
+                console.log('Before fetchWeatherData (from button click):', clickedCity);
+                fetchWeatherData(clickedCity);
+            });
 
-        cityHistory.append(newButton);
-        cityNames.push(searchValue);
-        localStorage.setItem('cityNames', JSON.stringify(cityNames));
-        searchInput.val('');
+            cityHistory.append(newButton);
+            cityNames.push(searchValue);
+            localStorage.setItem('cityNames', JSON.stringify(cityNames));
+            searchInput.val('');
+        }
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
