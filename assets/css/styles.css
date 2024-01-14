@@ -1,7 +1,19 @@
+.weather-header {
+    background: rgb(2,0,36);
+    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,15,121,1) 0%, rgba(0,86,255,1) 100%);
+}
+
 .input-group {
     display: block;
 }
 
-#today {
+.today {
     border: 1px black solid;
+}
+
+.forecast {
+    background-color: #3a466e;
+    margin: 10px;
+    padding: 10px;
+    color: #ffffff;
 }
