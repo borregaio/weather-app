@@ -66,20 +66,30 @@ searchButton.on('click', function (event) {
             .then(weatherResponse => weatherResponse.json())
             .then(weatherData => {
                 // Step 4: Access the weather icon code and create the URL for the PNG image
-                const iconCode = weatherData.list[0].weather[0].icon;
+                const iconCode= weatherData.list[0].weather[0].icon;
                 const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
-                console.log('Weather Icon URL:', iconUrl);
+                const temperatureKelvin = weatherData.list[0].main.temp;
+                const temperatureCelsius = (temperatureKelvin - 273.15).toFixed(2);
+                const windCode = weatherData.list[0].wind.speed;
+                const humidityCode = weatherData.list[0].main.humidity;
+                // console.log('Weather Icon URL:', iconUrl);
 
                 // Today's weather
                 var today = dayjs();
                 var todayInfo = $('#today');
                 var emoji = $('<img>');
+                var temperature = $('<p>');
+                var wind = $('<p>');
+                var humidity = $('<p>');
 
                 todayInfo.append(searchValue.charAt(0).toUpperCase() + searchValue.slice(1));
                 todayInfo.append(' ');
                 todayInfo.append(today.format('DD/MM/YYYY'));
                 todayInfo.append(' ');
                 todayInfo.append(emoji.attr('src', iconUrl));
+                todayInfo.append(temperature.text('Temp: ' + temperatureCelsius + '°C'));
+                todayInfo.append(wind.text('Wind: ' + windCode + 'KPH'));
+                todayInfo.append(humidity.text('Humidity: ' + humidityCode + '%'));
             })
             .catch(error => {
                 console.error('Error:', error);
