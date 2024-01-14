@@ -66,7 +66,7 @@ searchButton.on('click', function (event) {
             .then(weatherResponse => weatherResponse.json())
             .then(weatherData => {
                 // Step 4: Access the weather icon code and create the URL for the PNG image
-                const iconCode= weatherData.list[0].weather[0].icon;
+                const iconCode = weatherData.list[0].weather[0].icon;
                 const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
                 const temperatureKelvin = weatherData.list[0].main.temp;
                 const temperatureCelsius = (temperatureKelvin - 273.15).toFixed(2);
@@ -77,6 +77,8 @@ searchButton.on('click', function (event) {
                 // Today's weather
                 var today = dayjs();
                 var todayInfo = $('#today');
+                // Clear existing content before appending new information
+                todayInfo.empty();
                 var emoji = $('<img>');
                 var temperature = $('<p>');
                 var wind = $('<p>');
@@ -90,20 +92,46 @@ searchButton.on('click', function (event) {
                 todayInfo.append(temperature.text('Temp: ' + temperatureCelsius + '°C'));
                 todayInfo.append(wind.text('Wind: ' + windCode + 'KPH'));
                 todayInfo.append(humidity.text('Humidity: ' + humidityCode + '%'));
+
+                var forecast = $('#forecast');
+
+                // Clear existing content before appending new information
+                forecast.empty();
+
+                var day1 = $('<div>');
+                var day1h1 = $('<h4>');
+                var day1Date = today.add(1, 'day');
+                var day1emoji = $('img');
+                const day1Icon = weatherData.list[4].weather[0].icon;
+                const day1IconUrl = `http://openweathermap.org/img/wn/${day1Icon}.png`;
+                var day1Temperature = $('<p>');
+                var day1Wind = $('<p>');
+                var day1Humidity = $('<p>');
+
+                const day1TemperatureKelvin = weatherData.list[8].main.temp;
+                const day1TemperatureCelsius = (temperatureKelvin - 273.15).toFixed(2);
+                const day1WindCode = weatherData.list[8].wind.speed;
+                const day1HumidityCode = weatherData.list[8].main.humidity;
+
+                forecast.append($('<h3>').text('5-Day Forecast:'));
+                // Set the content for day 1
+                day1h1.text(day1Date.format('DD/MM/YYYY'));
+                day1.append(day1h1);
+                day1.append(day1emoji.attr('src', day1IconUrl));
+                day1.append(day1Temperature.text('Temp: ' + day1TemperatureCelsius + '°C'));
+                day1.append(day1Wind.text('Wind: ' + day1WindCode + 'KPH'));
+                day1.append(day1Humidity.text('Humidity: ' + day1HumidityCode + '%'));
+
+
+
+                // Append day 1 to the forecast
+                forecast.append(day1);
             })
             .catch(error => {
                 console.error('Error:', error);
             });
     }
 });
-
-
-
-
-
-
-
-
 
 
 
