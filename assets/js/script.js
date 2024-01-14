@@ -69,7 +69,7 @@ searchButton.on('click', function (event) {
                 const iconCode = weatherData.list[0].weather[0].icon;
                 const iconUrl = `http://openweathermap.org/img/wn/${iconCode}.png`;
                 const temperatureKelvin = weatherData.list[0].main.temp;
-                const temperatureCelsius = (temperatureKelvin - 273.15).toFixed(2);
+                const temperatureCelsius = (temperatureKelvin - 273.15).toFixed(0);
                 const windCode = weatherData.list[0].wind.speed;
                 const humidityCode = weatherData.list[0].main.humidity;
                 // console.log('Weather Icon URL:', iconUrl);
@@ -123,7 +123,7 @@ searchButton.on('click', function (event) {
                     var dayHumidity = $('<p>');
                 
                     const dayTemperatureKelvin = weatherData.list[dayIndex].main.temp;
-                    const dayTemperatureCelsius = (dayTemperatureKelvin - 273.15).toFixed(2);
+                    const dayTemperatureCelsius = (dayTemperatureKelvin - 273.15).toFixed(0);
                     const dayWindCode = weatherData.list[dayIndex].wind.speed;
                     const dayHumidityCode = weatherData.list[dayIndex].main.humidity;
                 
