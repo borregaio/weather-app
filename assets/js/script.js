@@ -98,8 +98,8 @@ searchButton.on('click', function (event) {
                 // Clear existing content before appending new information
                 forecast.empty();
 
-                var day1 = $('<div>');
-                var day1h1 = $('<h4>');
+                var day1 = $('<div>').addClass('col-sm');
+                var day1h4 = $('<h4>');
                 var day1Date = today.add(1, 'day');
                 var day1emoji = $('img');
                 const day1Icon = weatherData.list[4].weather[0].icon;
@@ -109,23 +109,35 @@ searchButton.on('click', function (event) {
                 var day1Humidity = $('<p>');
 
                 const day1TemperatureKelvin = weatherData.list[8].main.temp;
-                const day1TemperatureCelsius = (temperatureKelvin - 273.15).toFixed(2);
+                const day1TemperatureCelsius = (day1TemperatureKelvin - 273.15).toFixed(2);
                 const day1WindCode = weatherData.list[8].wind.speed;
                 const day1HumidityCode = weatherData.list[8].main.humidity;
 
                 forecast.append($('<h3>').text('5-Day Forecast:'));
                 // Set the content for day 1
-                day1h1.text(day1Date.format('DD/MM/YYYY'));
-                day1.append(day1h1);
+                day1h4.text(day1Date.format('DD/MM/YYYY'));
+                day1.append(day1h4);
                 day1.append(day1emoji.attr('src', day1IconUrl));
                 day1.append(day1Temperature.text('Temp: ' + day1TemperatureCelsius + '°C'));
                 day1.append(day1Wind.text('Wind: ' + day1WindCode + 'KPH'));
                 day1.append(day1Humidity.text('Humidity: ' + day1HumidityCode + '%'));
 
 
+                // Create container
+                var container = $('<div>').addClass('container');
 
-                // Append day 1 to the forecast
-                forecast.append(day1);
+                // Create row inside the container
+                var row = $('<div>').addClass('row');
+
+                // Append day 1 to the row
+                row.append(day1);
+
+                // Append the row to the container
+                container.append(row);
+
+                // Append the container to the forecast
+                forecast.append(container);
+
             })
             .catch(error => {
                 console.error('Error:', error);
