@@ -112,7 +112,7 @@ function fetchWeatherData(searchValue) {
 }
 ```
 
-### Get curret day with Day.js and display today's weather conditions:
+### Get current day with Day.js and display today's weather conditions:
 ```javascript
 // Display today's weather function
 function displayWeatherData(city, weatherData) {
